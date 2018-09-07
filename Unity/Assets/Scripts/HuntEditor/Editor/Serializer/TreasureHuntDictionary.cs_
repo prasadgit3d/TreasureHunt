@@ -1,0 +1,57 @@
+﻿using Sfs2X.Entities.Data;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+namespace SillyGames.TreasureHunt.HuntEditor
+{
+    public class TreasureHuntDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializeType
+    {
+        //Type m_KeyType = typeof(TKey);
+        //Type m_ValueType = typeof(TValue);
+
+        public void DeSerialize()
+        {
+           
+        }
+
+        public ISFSObject Serialize()
+        {
+            ISFSObject l_dicData = new SFSObject();
+            foreach (TKey key in this.Keys)
+            {
+                var value = this[key];
+                var serializedSFSData = HuntSerializer.Serialize(value);
+                l_dicData.PutSFSObject(key.ToString(),serializedSFSData);
+                //Debug.Log("Key :: " + key);
+                //TValue value = this[key];
+                //// Console.WriteLine("Value :: " + value.GetType().IsClass);
+                //if (value.GetType().IsClass)
+                //{
+                //    var customData = HuntSerializer.FindFields(value.GetType(), value);
+                //    l_dicData.PutSFSObject(key.ToString(),customData);
+                //}
+                //else
+                //{
+                //    Debug.Log("Value :: " + value);
+                //    var typeEnum = HuntSerializer.getSFSType(value.GetType());
+                //    SFSDataWrapper l_wrapper = new SFSDataWrapper(typeEnum, value);
+                //    l_dicData.Put(key.ToString(), l_wrapper);
+                //}
+
+            }
+
+            return l_dicData;
+        }
+
+        void ISerializeType.DeSerialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        ISFSObject ISerializeType.Serialize()
+        {
+            return Serialize();
+        }
+    }
+}

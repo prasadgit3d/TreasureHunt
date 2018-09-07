@@ -1,0 +1,166 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Sfs2X.Core;
+using Sfs2X.Entities.Data;
+namespace SillyGames.TreasureHunt.HuntEditor
+{
+    public class Testserialization 
+    {
+
+        // Use this for initialization
+      public static  void Start()
+        {
+
+            var empAppa = new Employee();
+            empAppa.Address = "kurla";
+            empAppa.m_EmpID = 0;
+            empAppa.m_name = "Appa";
+            empAppa.m_personInfo = "am an artist";
+
+            var empPrasad= new Employee();
+            empPrasad.Address = "kannamwarNagar1";
+            empPrasad.m_EmpID = 1;
+            empPrasad.m_name = "Prasad";
+            empPrasad.m_personInfo = "am a coder";
+
+            var personNishi = new Person();
+            personNishi.Address = "home";
+            personNishi.m_name = "Nishi";
+            personNishi.m_personInfo = "am a girl";
+
+            empPrasad.m_child = personNishi;
+
+            var empSatbir = new Employee();
+            empSatbir.Address = "andheri";
+            empSatbir.m_EmpID = 2;
+            empSatbir.m_name = "Satzbir";
+            empSatbir.m_personInfo = "am a freelancer";
+
+            Manager managerAjay = new Manager();
+            managerAjay.Address = "47/1035";
+            managerAjay.m_department = "gameDev";
+            managerAjay.m_EmpID = 1234;
+            managerAjay.m_name = "Ajay";
+            managerAjay.m_personInfo = "am a person";
+
+            managerAjay.m_dictTeam.Add(0, empAppa);
+            managerAjay.m_dictTeam.Add(1, empPrasad);
+            managerAjay.m_dictTeam.Add(2, empSatbir);
+
+            var boss = new Manager();
+            boss.Address = "bunglow";
+            boss.m_department = "CEO";
+            boss.m_EmpID = 999;
+            boss.m_name = "SG";
+            boss.m_personInfo = "am a boss";
+            boss.m_favoriteEmp = empPrasad;
+
+            boss.m_dictTeam.Add(0,managerAjay);
+
+            DictionaryExtensions.Serialize<float, string>(managerAjay.m_wallahDictionary);
+            
+            ISFSObject l_temp = HuntSerializer.Serialize(managerAjay);
+            Debug.Log(l_temp.GetDump());
+            //Debug.Log( HuntSerializer.Serialize(boss.habibi).GetDump());
+
+
+        }
+        
+        // Update is called once per frame
+        void Update()
+        {
+
+        }
+    }
+
+    [Serializable]
+    class Person
+    {
+        [DataMember]
+        public string m_name = "sdfsf";
+
+        [DataMember]
+        public string Name
+        {
+            get { return m_name; }
+            set { m_name = value; }
+        }
+
+
+        [DataMember]
+        public string m_personInfo = "I am a person";
+
+        [DataMember]
+        public string Address = "sdfsfsd";
+
+        [DataMember]
+        public Person m_child = null;
+    }
+
+    [Serializable]
+    class Employee : Person
+    {
+        [DataMember]
+        public int m_EmpID = 0;
+    }
+
+    [Serializable]
+    class Manager : Employee
+    {
+        [DataMember]
+        public int habibi = 0;
+
+        [DataMember]
+        public string m_department = "ergregerge";
+
+
+
+        //[DataMember]
+        public TreasureHuntDictionary<int, Employee> m_dictTeam = new TreasureHuntDictionary<int, Employee>();
+
+        //[DataMember]
+        //public TreasureHuntDictionary<int, int> m_dictWallah = new TreasureHuntDictionary<int, int>() { { 1,1}, { 2, 2 } , { 3, 3 } };
+
+        [DataMember]
+        public int[] wallahNumbers = new int[] { 2, 4, 6, 8, 10 };
+
+        [DataMember(IsDictionary = true)]
+        public Dictionary<float, string> m_wallahDictionary = new Dictionary<float, string>() { { 1.2f, "onePointTwo" } , { 2.3f, "TwoPointThree" } , { 3.4f, "ThreePointFour" } };
+
+        [DataMember]
+        public Employee m_favoriteEmp = null;
+    }
+    [Serializable]
+    class TestClass
+    {
+        public TestClass(int a, int b,int c, string s)
+        {
+            m_iA = a;
+            m_iB = b;
+            m_iC = c;
+            m_stringData = s;
+        }
+        [DataMember]
+        public int m_iA = 0;
+        [DataMember]
+        public int m_iB = 1;
+        [DataMember]
+        public int m_iC = 2;
+        [DataMember]
+        public string m_stringData = "ergregerge";
+
+    }
+
+    public static class DictionaryExtensions
+    {
+        public static ISFSObject Serialize<K,V>(Dictionary<K,V> a_dict)
+        {
+            Debug.Log("Dictionary key type: " + a_dict.Keys.GetEnumerator().Current.GetType());
+            Debug.Log("Dictionary value type: " + a_dict.Values.GetEnumerator().Current.GetType());
+            return null;
+        }
+    }
+        
+
+}

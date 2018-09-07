@@ -1,0 +1,153 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using System;
+using System.Reflection;
+using UnityEngine;
+using Sfs2X.Core;
+using Sfs2X.Entities.Data;
+
+namespace SillyGames.TreasureHunt.HuntEditor
+{
+    public interface ISerializeType
+    {
+        ISFSObject Serialize();
+        void DeSerialize();
+
+    }
+    public class HuntSerializer
+    {
+        public static ISFSObject Serialize(System.Object a_object)
+        {
+            ISFSObject l_allData = new SFSObject();
+            Type type = a_object.GetType();
+
+            if (type.IsClass && !type.IsDefined(typeof(SerializableAttribute), true))
+            {
+                throw new Exception("type is not define :(");
+            }
+
+            PropertyInfo[] l_properties = type.GetProperties();
+            foreach (var item in l_properties)
+            {
+                Debug.Log("Property Name: " + item.Name + ", Value: " + item.GetValue(a_object,null));
+                //var propertyObject = item.GetValue(a_object,null);
+                SerializeField(item, a_object, l_allData);
+            }
+            FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public|BindingFlags.Default);
+            foreach (var item in fields)
+            {
+                SerializeField(item, a_object, l_allData);
+            }
+
+            PutValueInSFS(a_object, type.Name, l_allData);
+            return l_allData;
+         }
+
+        public static void SerializeField(FieldInfo a_fieldInfo, System.Object a_object,  ISFSObject a_parentSFSData)
+        {
+            var fieldObject = a_fieldInfo.GetValue(a_object);
+            if (fieldObject == null)
+            {
+                a_parentSFSData.PutNull(a_fieldInfo.Name);
+                return;
+            }
+
+            var fieldObjectType = fieldObject.GetType();
+
+            SerializeField(fieldObject, fieldObjectType, a_fieldInfo, a_object, a_parentSFSData);
+        }
+
+        public static void SerializeField(PropertyInfo a_fieldInfo, System.Object a_object, ISFSObject a_parentSFSData)
+        {
+            var fieldObject = a_fieldInfo.GetValue(a_object, null);
+            if (fieldObject == null)
+            {
+                a_parentSFSData.PutNull(a_fieldInfo.Name);
+                return;
+            }
+            var fieldObjectType = fieldObject.GetType();
+
+            SerializeField(fieldObject, fieldObjectType, a_fieldInfo, a_object, a_parentSFSData);
+        }
+
+        public static void SerializeField(  System.Object a_fieldObject, 
+                                            System.Type a_fieldObjectType, 
+                                            MemberInfo a_memberInfo,
+                                            System.Object a_mainObject, 
+                                            ISFSObject a_parentSFSData)
+        {
+            if (a_memberInfo.IsDefined(typeof(DataMemberAttribute), false))
+            {
+                var enumerableObject = a_fieldObject as IEnumerable;
+                if (a_fieldObjectType == typeof(string))
+                {
+                    SFSDataWrapper l_wrapper = new SFSDataWrapper(SFSDataType.UTF_STRING, a_fieldObject);
+                    a_parentSFSData.Put(a_memberInfo.Name, l_wrapper);
+                }
+                else if (enumerableObject != null)
+                {
+                   // var customObject = EnumerableWrapper.Create(enumerableObject);
+                  //  var sfsObject = customObject.Serialize();
+                  //  a_parentSFSData.Put(a_memberInfo.Name, new SFSDataWrapper(SFSDataType.SFS_OBJECT, sfsObject));
+                }
+                else
+                {
+                    var serializedData = Serialize(a_fieldObject);
+                    a_parentSFSData.PutSFSObject(a_memberInfo.Name, serializedData);
+                }
+                if (!PutValueInSFS(a_fieldObject, a_memberInfo.Name, a_parentSFSData))
+                {
+                    //Debug.LogWarning("Could not retrieve sfs type for the type: " + a_fieldObjectType);
+                }
+            }
+            else
+            {
+                //ignore fields that have not declared as DataMemeberAttribute  
+            }
+        }
+
+        private static bool PutValueInSFS(System.Object a_data, string a_name , ISFSObject a_parentSFSData)
+        {
+            var sfsType = getSFSType(a_data.GetType());
+            if (sfsType != SFSDataType.NULL)
+            {
+                SFSDataWrapper sfsDataWraper = new SFSDataWrapper(sfsType, a_data);
+                a_parentSFSData.Put(a_name, sfsDataWraper);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static void DeSerialize<T>(T a_t)
+        {
+
+        }       
+
+        public static SFSDataType getSFSType(Type a_type)
+        {
+            SFSDataType l_type = SFSDataType.NULL;
+            if (a_type == typeof(int))
+            {
+                l_type = SFSDataType.INT;
+            }
+            else if (a_type == typeof(double))
+            {
+                l_type = SFSDataType.DOUBLE;
+            }
+            else if (a_type == typeof(float))
+            {
+                l_type = SFSDataType.FLOAT;
+            }
+            else if (a_type == typeof(string))
+            {
+                l_type = SFSDataType.UTF_STRING;
+            }
+            return l_type;
+        }
+
+    }
+}
+
