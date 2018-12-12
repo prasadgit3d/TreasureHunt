@@ -12,7 +12,23 @@ namespace SillyGames.TreasureHunt.HuntEditor
             get; set;
         }
 
+        public static Node GetNodeWithInstanceID(int a_iInstanceID)
+        {
+            var nodes = FindObjectsOfType<Node>();
+            foreach (var item in nodes)
+            {
+                if (item.GetInstanceID() == a_iInstanceID)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+
         public static Vector2 WindowSize { get; set; }
+
+        [SerializeField]
+        private Node m_ref = null;
 
         public Rect Area
         {
@@ -54,7 +70,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
 
         void Reset()
         {
-            Area = new Rect(10, 50, 200, 150);
+            Area = new Rect(10, 50, 200, 250);
         }
 
         private const float IconSize = 20;
@@ -91,7 +107,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
             
             GUI.Button(new Rect(lastRect.width -25, lastRect.y, 30, 20), "ss");
             //GUI.Button(lastRect, "button");
-           
+            
             GUILayout.EndArea();
           
             HandleMouseInput();
@@ -105,13 +121,54 @@ namespace SillyGames.TreasureHunt.HuntEditor
             {
                 DrawLine(MousePosition, HookPoint);
             }
+
+            if (IsReference)
+            {
+                if (Ref != null)
+                {
+                    DrawLine(RingPoint, Ref.HookPoint);
+                }
+            }
         }
 
         protected virtual void OnDrawNode()
         {
-            
+            DrawDefaultInpector();
+            DrawHook();
+            if (IsReference)
+            {
+                DrawRing();
+            }
+            if (DrawSelect())
+            {
+                Selection.activeObject = gameObject;
+            }
+            if (DrawDelete())
+            {
+                DestroyImmediate(gameObject);
+                return;
+            }
+            IsReference = GUILayout.Toggle(IsReference, IsReference ? "Reference Type" : "Value Type", GUI.skin.button);
         }
 
+        private Editor m_customEditor = null;
+
+        protected Editor CustomEditor
+        {
+            get
+            {
+                if(m_customEditor == null)
+                {
+                    m_customEditor = Editor.CreateEditor(this);
+                }
+                return m_customEditor;
+            }
+        }
+
+        private void DrawDefaultInpector()
+        {
+            CustomEditor.OnInspectorGUI();
+        }
         protected virtual Rect GetRect()
         {
             return Area;
@@ -119,14 +176,58 @@ namespace SillyGames.TreasureHunt.HuntEditor
 
         private static Texture s_ringTexture = null;
         private static Texture s_hookTexture = null;
+        private static Texture s_selectTexture = null;
+        private static Texture s_deleteTexture = null;
+        private static Texture RingTexture
+        {
+            get
+            {
+                if (s_ringTexture == null)
+                {
+                    s_ringTexture = Resources.Load<Texture>(RING_ICON_PATH);
+                }
+                return s_ringTexture;
+            }
+        }
+        private static Texture HookTexture
+        {
+            get
+            {
+                if (s_hookTexture == null)
+                {
+                    s_hookTexture = Resources.Load<Texture>(HOOK_ICON_PATH);
+                }
+                return s_hookTexture;
+            }
+        }
+
+        private static Texture SelectTexture
+        {
+            get
+            {
+                if (s_selectTexture == null)
+                {
+                    s_selectTexture = Resources.Load<Texture>(SELECT_ICON_PATH);
+                }
+                return s_selectTexture;
+            }
+        }
+        private static Texture DeleteTexture
+        {
+            get
+            {
+                if (s_deleteTexture== null)
+                {
+                    s_deleteTexture = Resources.Load<Texture>(DELETE_ICON_PATH);
+                }
+                return s_deleteTexture;
+            }
+        }
 
         public static bool DrawRing(Rect a_rect)
         {
-            if (s_ringTexture == null)
-            {
-                s_ringTexture = Resources.Load<Texture>(RING_ICON_PATH);
-            }
-            return DrawIcon(s_ringTexture, a_rect,true);
+            
+            return DrawIcon(RingTexture, a_rect,true);
         }
 
         private class DragInformation
@@ -156,7 +257,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
             {
                 if(DragInfo.NodeBeingDragged != null)
                 {
-                    OnNodeDropped(DragInfo.NodeBeingDragged);
+                    TryLinking(DragInfo.NodeBeingDragged);
                 }
                 DragInfo.NodeBeingDragged = null;
                 IsMoving = false;
@@ -164,32 +265,110 @@ namespace SillyGames.TreasureHunt.HuntEditor
 
             if(DrawRing(RingRect))
             {
-                OnUnlicked(a_linkedNode);
+                Unlink(a_linkedNode);
+            }            
+        }
+
+        [HideInInspector]
+        [SerializeField]
+        private bool m_bIsReference = false;
+        public bool IsReference
+        {
+            get
+            {
+                return m_bIsReference;
+            }
+            set
+            {
+                ///when set to true, need to check if existing ref value is not causing circular reference
+                if (value && Ref != null)
+                {
+                    if (IsRecursiveRef(Ref))
+                    {
+                        Debug.LogWarning("Recursive ref! can not set node value type to ref.: " + this + ", instance id: " + this.GetInstanceID());
+                        return;
+                    }
+
+                }
+                m_bIsReference = value;
+
+            }
+        }
+
+        public Node Ref
+        {
+            get
+            {
+                if (RefInstanceID == 0)
+                {
+                    return null;
+                }
+                return m_ref;
             }
 
-          
-            
+            set
+            {
+                if (!IsRecursiveRef(value))
+                {
+                    //RefInstanceID = value != null ? value.GetInstanceID() : 0;
+                    m_ref = value;
+                }
+                else
+                {
+                    Debug.LogWarning("Value can not be assigned due to recursive ref, Node: " + this + ", ref: " + value);
+                }
+            }
         }
 
-        protected virtual void OnUnlicked(Node a_linkedNode)
+        //[SerializeField]
+        //private int m_refInstanceID = 0;
+
+        private int RefInstanceID
         {
-            
+            get
+            {
+                return m_ref != null ? m_ref.GetInstanceID() : 0;
+            }
+            //set
+            //{
+            //    m_refInstanceID = value;
+
+            //}
         }
 
-        protected virtual void OnNodeDropped(Node a_node)
+        public bool IsRecursiveRef(Node a_ref)
         {
-            
+            if (a_ref == this)
+            {
+                return true;
+            }
+            var tempRef = a_ref;
+
+            while (tempRef != null && tempRef.IsReference && tempRef != this)
+            {
+                tempRef = tempRef.Ref;
+            }
+
+            return tempRef == this;
+        }
+
+        protected virtual void Unlink(Node a_linkedNode)
+        {
+            Ref = null;
+        }
+
+        protected virtual void TryLinking(Node a_node)
+        {
+            if (a_node.GetType() == GetType())
+            {
+                //Debug.Log("Linking : " + a_node.GetHashCode() + ", to : " + GetHashCode());
+                Ref = a_node;
+            }
         }
 
         public static void DrawHook(Rect a_rect)
         {
-            if (s_hookTexture == null)
-            {
-                s_hookTexture = Resources.Load<Texture>(HOOK_ICON_PATH);
-
-            }
-            
-            DrawIcon(s_hookTexture, a_rect,false);
+            DrawIcon(HookTexture, a_rect, false);
         }
 
         public static bool DrawSelect(Rect a_rect)
@@ -197,7 +376,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
             var l_isSelectCliked = false;
             if (PressedKey == KeyCode.LeftAlt)
             {
-                l_isSelectCliked = (GUI.Button(a_rect, "y"));
+                l_isSelectCliked = (GUI.Button(a_rect, SelectTexture));
                
             }
             return l_isSelectCliked;
@@ -208,7 +387,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
             var l_isSelectCliked = false;
             if (PressedKey == KeyCode.LeftAlt)
             {
-                l_isSelectCliked = (GUI.Button(a_rect, "d"));
+                l_isSelectCliked = (GUI.Button(a_rect, DeleteTexture));
 
             }
             return l_isSelectCliked;
@@ -287,6 +466,10 @@ namespace SillyGames.TreasureHunt.HuntEditor
 
         private const string RING_ICON_PATH = "Icons/ring";
         private const string HOOK_ICON_PATH = "Icons/hook";
+        private const string SELECT_ICON_PATH = "Icons/select";
+        private const string DELETE_ICON_PATH = "Icons/delete";
+
+
 
         public static KeyCode PressedKey = KeyCode.None;
         public static bool DrawIcon(Texture a_texture , Rect a_rect, bool a_bAllowClose)

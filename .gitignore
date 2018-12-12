@@ -3,3 +3,7 @@
 /Unity/obj
 /Unity/Assembly-CSharp.csproj
 /Unity/Assembly-CSharp-Editor.csproj
+/Unity/.vs
+/Unity/Temp
+/Unity/Unity.sln
+/Unity/.vs/TreasureHunt/v15/*.suo

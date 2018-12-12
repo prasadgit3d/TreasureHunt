@@ -5,20 +5,20 @@ using SillyGames.TreasureHunt.HuntEditor;
 using UnityEngine;
 namespace SillyGames.TreasureHunt.HuntEditor
 {
-    public class IntNode : PrimNode<int>
+    public class IntNode : Node<int>
     {
-        public override PrimNode<int> Ref
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        //public override PrimNode<int> Ref
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
 
       
     }

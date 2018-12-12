@@ -8,30 +8,42 @@ namespace SillyGames.TreasureHunt.HuntEditor
 {
     public struct StringStruct : IComparable
     {
-        string m_strData;
+        public string m_strData;
 
         public int CompareTo(object obj)
         {
             return ((IComparable)m_strData).CompareTo(obj);
         }
+        
     }
 
-    public class StringNode : PrimNode<StringStruct>
+    public class StringNode : Node<string>
     {
-        [SerializeField]
-        private StringNode m_ref = null;
-
-        public override PrimNode<StringStruct> Ref
+        public StringNode()
         {
-            get
-            {
-                return m_ref;
-            }
+            var val = Value;
+            //val.m_strData = "";
+            Value = val;
 
-            set
-            {
-                m_ref = (StringNode)value;
-            }
+            //UnityEditor.SerializedObject sss;
+            //sss.pro
         }
+
+        
+        //[SerializeField]
+        //private StringNode m_ref = null;
+
+        //public override PrimNode<StringStruct> Ref
+        //{
+        //    get
+        //    {
+        //        return m_ref;
+        //    }
+
+        //    set
+        //    {
+        //        m_ref = (StringNode)value;
+        //    }
+        //}
     }
 }

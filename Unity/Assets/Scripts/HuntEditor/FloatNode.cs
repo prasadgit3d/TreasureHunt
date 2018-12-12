@@ -5,20 +5,20 @@ using SillyGames.TreasureHunt.HuntEditor;
 using System;
 namespace SillyGames.TreasureHunt.HuntEditor
 {
-    public class FloatNode : PrimNode<float>
+    public class FloatNode : Node<float>
     {
-        public override PrimNode<float> Ref
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
+        //public override PrimNode<float> Ref
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
 
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
 
         // Use this for initialization
         void Start()

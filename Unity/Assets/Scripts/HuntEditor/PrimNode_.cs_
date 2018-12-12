@@ -1,0 +1,84 @@
+﻿using UnityEngine;
+using System.Collections;
+using System;
+using UnityEditor;
+
+namespace SillyGames.TreasureHunt.HuntEditor
+{
+    /// <summary>
+    /// since the primitive nodes must have a value and should not be null,hence the struct constrain
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class PrimNode<T> : Node where T : struct, IComparable
+    {
+        [SerializeField]
+        private T m_value = default(T);
+
+        public T Value
+        {
+            get
+            {
+                if (!IsReference)
+                {
+                    return m_value;
+                }
+                else
+                {
+                    return Ref != null ? Ref.Value : default(T);
+                }
+            }
+            set
+            {
+                m_value = value;
+            }
+        }
+
+        public T? RefValue
+        {
+            get
+            {
+                return (Ref != null) ? (T?)Ref.Value : null;
+            }
+        }
+
+        protected new PrimNode<T> Ref
+        {
+            get
+            {
+                return (PrimNode<T>)base.Ref;
+            }
+            private set
+            {
+                base.Ref = value;
+            }
+        }
+
+        private Vector2 m_vecScrollPos = Vector2.zero;
+        SerializedObject serObj = null;
+        protected override sealed void OnDrawNode()
+        {
+
+            base.OnDrawNode();
+            //if(!IsReference)
+            {
+                m_vecScrollPos = GUILayout.BeginScrollView(m_vecScrollPos);
+                GUILayout.BeginVertical();
+                if (serObj == null)
+                {
+                    serObj = new UnityEditor.SerializedObject(this);
+                }
+                //var m_valueProperty = (IsReference && Ref != null) ? Ref.m_customEditor.serializedObject.FindProperty("m_value") : m_customEditor.serializedObject.FindProperty("m_value");
+                var m_valueProperty = serObj.FindProperty("m_value");
+                if (m_valueProperty != null)
+                {
+                    EditorGUILayout.PropertyField(m_valueProperty, true);
+                }
+
+                GUILayout.EndVertical();
+                GUILayout.EndScrollView();
+            }
+        }
+
+        protected virtual void DrawPrimNode() { }
+    }
+}

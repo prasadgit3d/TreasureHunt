@@ -101,7 +101,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
                 m_nodeCreationBntRect.y = m_rect.height + 10;
                 m_nodeCreationBntRect.height = 40;
                 m_nodeCreationBntRect.width = 150;
-                if (GUI.Button(m_nodeCreationBntRect, " Create Node"))
+                if (GUI.Button(m_nodeCreationBntRect, "Create Node"))
                 {
                     CreateNode();
                 }
@@ -155,12 +155,15 @@ namespace SillyGames.TreasureHunt.HuntEditor
         }
         private void CreateNode()
         {
+            if(m_nodeTypes.Count == 0)
+            {
+                FindAllDerivedTypes<Node>();
+            }
             // throw new NotImplementedException();
             Debug.Log("index: " + index + ", count: " + m_nodeTypes.Count);
             Type typeDefine = m_nodeTypes[index];
             GameObject node = new GameObject(typeDefine.Name, typeDefine);
             RefreshNodes();
-
         }
     }
 }
