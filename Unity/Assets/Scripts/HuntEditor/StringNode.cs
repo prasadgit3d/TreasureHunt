@@ -18,18 +18,7 @@ namespace SillyGames.TreasureHunt.HuntEditor
     }
 
     public class StringNode : Node<string>
-    {
-        public StringNode()
-        {
-            var val = Value;
-            //val.m_strData = "";
-            Value = val;
-
-            //UnityEditor.SerializedObject sss;
-            //sss.pro
-        }
-
-        
+    {        
         //[SerializeField]
         //private StringNode m_ref = null;
 

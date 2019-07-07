@@ -21,10 +21,6 @@ namespace SillyGames.TreasureHunt.HuntEditor
                     return Ref != null ? Ref.Value : default(T);
                 }
             }
-            set
-            {
-                m_value = value;
-            }
         }
 
         public T RefValue
@@ -35,6 +31,18 @@ namespace SillyGames.TreasureHunt.HuntEditor
             }
         }
 
+        public T LocalValue
+        {
+            get
+            {
+                return m_value;
+            }
+
+            set
+            {
+                m_value = value;
+            }
+        }
         protected new Node<T> Ref
         {
             get
